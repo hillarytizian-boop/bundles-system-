@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - BingwaSokoni</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #070b12;
+            color: #f1f5f9;
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 1rem;
+        }
+        .login-container, .admin-container {
+            max-width: 500px;
+            margin: 80px auto;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .admin-container {
+            max-width: 1200px;
+            margin: 1rem auto;
+        }
+        input, button {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border-radius: 0.8rem;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        button {
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        .error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 0.7rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        th {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .badge-active { background: rgba(16,185,129,0.2); color: #10b981; }
+        .badge-inactive { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .btn-sm {
+            padding: 0.2rem 0.8rem;
+            margin: 0 0.2rem;
+            font-size: 0.75rem;
+            width: auto;
+            display: inline-block;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .stat-icon {
+            font-size: 1.8rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            opacity: 0.6;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            width: auto;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #f97316, #fbbf24);
+            border-color: transparent;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: #f97316;
+            margin-bottom: 1rem;
+            width: auto;
+            padding: 0.4rem 1rem;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    // ---------- DATA ----------
+    const BUNDLES = [
+        { id:"1",  name:"1GB – 1 Hour Blitz",        category:"DATA", price:19, volume:"1GB", validity:"1 Hour",        isPopular:false, active:true },
+        { id:"2",  name:"250MB – Daily Starter",      category:"DATA", price:20, volume:"250MB", validity:"24 Hours",      isPopular:false, active:true },
+        { id:"3",  name:"1.25GB – Till Midnight",     category:"DATA", price:55, volume:"1.25GB", validity:"Till Midnight", isPopular:true,  active:true },
+        { id:"4",  name:"1.5GB – 3 Hour Turbo",       category:"DATA", price:50, volume:"1.5GB", validity:"3 Hours",       isPopular:false, active:true },
+        { id:"5",  name:"350MB – Weekly Lite",        category:"DATA", price:49, volume:"350MB", validity:"7 Days",        isPopular:false, active:true },
+        { id:"6",  name:"1GB – Daily Power",          category:"DATA", price:99, volume:"1GB",   validity:"24 Hours",      isPopular:true,  active:true },
+        { id:"7",  name:"2.5GB – Weekly Value",       category:"DATA", price:300, volume:"2.5GB", validity:"7 Days",        isPopular:true,  active:true },
+        { id:"8",  name:"10GB – Weekly Premium",      category:"DATA", price:700, volume:"10GB",  validity:"7 Days",        isPopular:true,  active:true },
+        { id:"9",  name:"2GB – Multi Daily",          category:"DATA", price:110, volume:"2GB",   validity:"24 Hours",      isPopular:true,  active:true },
+        { id:"10", name:"1GB – Multi 1 Hour",         category:"DATA", price:22, volume:"1GB",    validity:"1 Hour",        isPopular:false, active:true },
+        { id:"11", name:"1.5GB – Multi 3 Hours",      category:"DATA", price:52, volume:"1.5GB",  validity:"3 Hours",       isPopular:false, active:true },
+        { id:"12", name:"20 SMS – Daily Spark",       category:"SMS",  price:5,  volume:"20 SMS",  validity:"24 Hours",      isPopular:false, active:true },
+        { id:"13", name:"200 SMS – Daily Chatter",    category:"SMS",  price:10, volume:"200 SMS", validity:"24 Hours",      isPopular:false, active:true },
+        { id:"14", name:"1000 SMS – Daily Blast",     category:"SMS",  price:18, volume:"1000 SMS",validity:"24 Hours",      isPopular:true,  active:true },
+        { id:"15", name:"1000 SMS – Weekly Pack",     category:"SMS",  price:30, volume:"1000 SMS",validity:"7 Days",        isPopular:false, active:true },
+        { id:"16", name:"7000 SMS – Weekly Mega",     category:"SMS",  price:48, volume:"7000 SMS",validity:"7 Days",        isPopular:true,  active:true },
+        { id:"17", name:"1500 SMS – Monthly Plus",    category:"SMS",  price:100,volume:"1500 SMS",validity:"30 Days",       isPopular:false, active:true },
+        { id:"18", name:"3500 SMS – Monthly Elite",   category:"SMS",  price:200,volume:"3500 SMS",validity:"30 Days",       isPopular:true,  active:true },
+        { id:"19", name:"45 Min – 3 Hour Rush",       category:"MINUTES", price:23, volume:"45 Min", validity:"3 Hours",       isPopular:false, active:true },
+        { id:"20", name:"50 Min – Till Midnight",     category:"MINUTES", price:51, volume:"50 Min", validity:"Till Midnight", isPopular:false, active:true },
+        { id:"21", name:"250 Min – Weekly Talktime",  category:"MINUTES", price:250,volume:"250 Min", validity:"7 Days",        isPopular:true,  active:true },
+        { id:"22", name:"1250 Min – Monthly Mega",    category:"MINUTES", price:1000,volume:"1250 Min", validity:"30 Days",       isPopular:true,  active:true },
+    ];
+
+    const MOCK_TXNS = [
+        { phone:"0712345678", bundle:"1GB – Daily Power",       amount:99,  status:"SUCCESS", date:"2025-05-07" },
+        { phone:"0798765432", bundle:"10GB – Weekly Premium",   amount:700, status:"SUCCESS", date:"2025-05-07" },
+        { phone:"0756789012", bundle:"7000 SMS – Weekly Mega",  amount:48,  status:"PENDING", date:"2025-05-08" },
+        { phone:"0723456789", bundle:"2.5GB – Weekly Value",    amount:300, status:"SUCCESS", date:"2025-05-08" },
+        { phone:"0711223344", bundle:"250 Min – Weekly",        amount:250, status:"FAILED",  date:"2025-05-08" },
+        { phone:"0745678901", bundle:"1.25GB – Till Midnight",  amount:55,  status:"SUCCESS", date:"2025-05-09" },
+    ];
+
+    const categoryIcons = { DATA:"📶", SMS:"💬", MINUTES:"📞" };
+    const categoryColors = { DATA:"#06b6d4", SMS:"#a78bfa", MINUTES:"#10b981" };
+
+    let isLoggedIn = false;
+    let currentTab = "dashboard";
+    let bundles = [...BUNDLES];
+    // Helper to render the entire app based on login state
+    function render() {
+        const app = document.getElementById('app');
+        if (!app) return;
+        if (!isLoggedIn) {
+            renderLogin(app);
+        } else {
+            renderAdmin(app);
+        }
+    }
+
+    function renderLogin(container) {
+        container.innerHTML = `
+            <div class="login-container">
+                <h2 style="margin-bottom: 1rem;">🔐 Admin Login</h2>
+                <input type="text" id="username" placeholder="Username" autocomplete="off">
+                <input type="password" id="password" placeholder="Password">
+                <button id="loginBtn">Login</button>
+                <div id="loginError" class="error"></div>
+            </div>
+        `;
+        const loginBtn = document.getElementById('loginBtn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorDiv = document.getElementById('loginError');
+
+        const attemptLogin = () => {
+            const user = usernameInput.value.trim();
+            const pass = passwordInput.value;
+            if (user === 'moha' && pass === 'moha123') {
+                isLoggedIn = true;
+                render();
+            } else {
+                errorDiv.textContent = 'Invalid username or password';
+            }
+        };
+        loginBtn.onclick = attemptLogin;
+        usernameInput.onkeypress = (e) => { if (e.key === 'Enter') attemptLogin(); };
+        passwordInput.onkeypress = (e) => { if (e.key === 'Enter') attemptLogin(); };
+    }
+
+    function renderAdmin(container) {
+        const totalRevenue = MOCK_TXNS.filter(t => t.status === 'SUCCESS').reduce((s, t) => s + t.amount, 0);
+        const totalTxns = MOCK_TXNS.length;
+        const successCount = MOCK_TXNS.filter(t => t.status === 'SUCCESS').length;
+        const successRate = totalTxns ? Math.round((successCount / totalTxns) * 100) : 0;
+        const activeBundles = bundles.filter(b => b.active).length;
+
+        const topBundles = [
+            { name:"1GB – Daily Power", count:32 },
+            { name:"10GB – Weekly Premium", count:18 },
+            { name:"2.5GB – Weekly Value", count:14 },
+            { name:"7000 SMS – Mega", count:25 },
+            { name:"250 Min – Weekly", count:9 },
+        ];
+
+        const revenueByCat = [
+            { cat:"DATA", rev:19200, pct:68 },
+            { cat:"SMS", rev:4800, pct:17 },
+            { cat:"MINUTES", rev:4200, pct:15 },
+        ];
+
+        const html = `
+            <div class="admin-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>📊 Admin Dashboard</h2>
+                    <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn ${currentTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">📈 Dashboard</button>
+                    <button class="tab-btn ${currentTab === 'bundles' ? 'active' : ''}" data-tab="bundles">📦 Manage Bundles</button>
+                    <button class="tab-btn ${currentTab === 'transactions' ? 'active' : ''}" data-tab="transactions">💳 Transactions</button>
+                </div>
+                <div id="tabContent"></div>
+            </div>
+        `;
+        container.innerHTML = html;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = () => {
+                currentTab = btn.getAttribute('data-tab');
+                render();
+            };
+        });
+        document.getElementById('logoutBtn').onclick = () => {
+            isLoggedIn = false;
+            render();
+        };
+        const tabContent = document.getElementById('tabContent');
+        if (currentTab === 'dashboard') {
+            tabContent.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon">💰</div><div style="font-size:0.8rem; color:#94a3b8;">Total Revenue</div><div style="font-size:1.8rem; font-weight:bold; color:#f97316;">KES ${totalRevenue.toLocaleString()}</div></div>
+                    <div class="stat-card"><div class="stat-icon">📋</div><div style="font-size:0.8rem; color:#94a3b8;">Transactions</div><div style="font-size:1.8rem; font-weight:bold; color:#06b6d4;">${totalTxns}</div></div>
+                    <div class="stat-card"><div class="stat-icon">✅</div><div style="font-size:0.8rem; color:#94a3b8;">Success Rate</div><div style="font-size:1.8rem; font-weight:bold; color:#10b981;">${successRate}%</div></div>
+                    <div class="stat-card"><div class="stat-icon">📦</div><div style="font-size:0.8rem; color:#94a3b8;">Active Bundles</div><div style="font-size:1.8rem; font-weight:bold; color:#a78bfa;">${activeBundles}</div></div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="glass-card" style="padding:1rem;">
+                        <h3 style="margin-bottom:1rem;">🏆 Top Selling Bundles</h3>
+                        ${topBundles.map((b, i) => `
+                            <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:0.8rem;">
+                                <span style="width:24px;">${i+1}</span>
+                                <span style="flex:1; font-size:0.85rem;">${b.name}</span>
+                                <div style="width:100px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px;"><div style="width:${(b.count/32)*100}%; height:100%; background:linear-gradient(90deg,#f97316,#fbbf24); border-radius:3px;"></div></div>
+                                <span style="font-weight:bold; color:#f97316;">${b.count}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="glass-card" style="padding:1rem;">
+                        <h3 style="margin-bottom:1rem;">📊 Revenue by Category</h3>
+                        ${revenueByCat.map(item => `
+                            <div style="margin-bottom:1rem;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                                    <span>${categoryIcons[item.cat]} ${item.cat}</span>
+                                    <span>KES ${item.rev.toLocaleString()}</span>
+                                </div>
+                                <div style="height:8px; background:rgba(255,255,255,0.1); border-radius:4px;"><div style="width:${item.pct}%; height:100%; background:${categoryColors[item.cat]}; border-radius:4px;"></div></div>
+                            </div>
+                        `).join('')}
+                        <hr style="border-color:rgba(255,255,255,0.1); margin:1rem 0;">
+                        <div><span>TOTAL REVENUE</span> <span style="float:right; font-weight:bold;">KES ${revenueByCat.reduce((s, i) => s + i.rev, 0).toLocaleString()}</span></div>
+                    </div>
+                </div>
+                <div class="glass-card" style="margin-top:1.5rem; padding:1rem;">
+                    <h3>🕒 Recent Transactions</h3>
+                    <div style="overflow-x:auto; margin-top:1rem;">
+                        <table>
+                            <thead><tr><th>Phone</th><th>Bundle</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                            <tbody>
+                                ${MOCK_TXNS.map(t => `
+                                    <tr>
+                                        <td>${t.phone}</td>
+                                        <td>${t.bundle}</td>
+                                        <td style="color:#f97316;">KES ${t.amount}</td>
+                                        <td><span class="badge" style="background:${t.status === 'SUCCESS' ? 'rgba(16,185,129,0.2)' : (t.status === 'PENDING' ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)')}; color:${t.status === 'SUCCESS' ? '#10b981' : (t.status === 'PENDING' ? '#fbbf24' : '#ef4444')};">${t.status}</span></td>
+                                        <td>${t.date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        else if (currentTab === 'bundles') {
+            tabContent.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Manage Bundles (${bundles.length})</h3>
+                    <button id="addBundleBtn" class="btn-sm" style="background: #f97316;">➕ New Bundle</button>
+                </div>
+                <div class="glass-card" style="overflow-x:auto;">
+                    <table>
+                        <thead><tr><th>Name</th><th>Category</th><th>Volume</th><th>Validity</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${bundles.map(b => `
+                                <tr>
+                                    <td>${b.name}</td>
+                                    <td><span style="color:${categoryColors[b.category]}">${categoryIcons[b.category]} ${b.category}</span></td>
+                                    <td>${b.volume}</td>
+                                    <td>${b.validity}</td>
+                                    <td style="color:#f97316;">KES ${b.price}</td>
+                                    <td><span class="badge ${b.active ? 'badge-active' : 'badge-inactive'}">${b.active ? 'Active' : 'Off'}</span></td>
+                                    <td>
+                                        <button class="toggle-active btn-sm" data-id="${b.id}">${b.active ? 'Deactivate' : 'Activate'}</button>
+                                        <button class="delete-bundle btn-sm" data-id="${b.id}" style="background:#ef4444;">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.querySelectorAll('.toggle-active').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.getAttribute('data-id');
+                    bundles = bundles.map(b => b.id === id ? { ...b, active: !b.active } : b);
+                    render();
+                };
+            });
+            document.querySelectorAll('.delete-bundle').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm('Permanently delete this bundle?')) {
+                        bundles = bundles.filter(b => b.id !== id);
+                        render();
+                    }
+                };
+            });
+            const addBtn = document.getElementById('addBundleBtn');
+            if (addBtn) addBtn.onclick = () => alert('In a full version, a form would appear. This is a demo.');
+        }
+        else if (currentTab === 'transactions') {
+            tabContent.innerHTML = `
+                <h3>Transaction History</h3>
+                <div class="glass-card" style="overflow-x:auto; margin-top: 1rem;">
+                    <table>
+                        <thead><tr><th>Phone</th><th>Bundle</th><th>Amount</th><th>Status</th><th>M-Pesa Code</th><th>Date</th></tr></thead>
+                        <tbody>
+                            ${MOCK_TXNS.map(t => `
+                                <tr>
+                                    <td>${t.phone}</td>
+                                    <td>${t.bundle}</td>
+                                    <td style="color:#f97316;">KES ${t.amount}</td>
+                                    <td><span class="badge" style="background:${t.status === 'SUCCESS' ? 'rgba(16,185,129,0.2)' : (t.status === 'PENDING' ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)')}; color:${t.status === 'SUCCESS' ? '#10b981' : (t.status === 'PENDING' ? '#fbbf24' : '#ef4444')};">${t.status}</span></td>
+                                    <td>${t.mpesa || '—'}</td>
+                                    <td>${t.date}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+    }
+
+    render();
+</script>
+</body>
+</html>
